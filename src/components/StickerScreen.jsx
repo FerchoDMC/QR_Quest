@@ -1,17 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Award, CheckCircle, RotateCcw, Sparkles } from 'lucide-react';
-import { playSparkle, playClick } from '../utils/audio';
-import { triggerHaptic } from '../utils/haptics';
+import { Award, CheckCircle } from 'lucide-react';
 
-export default function StickerScreen({ session, onResetGame }) {
+export default function StickerScreen({ session }) {
   const code = (session.id || 'TI-QUEST').slice(-6).toUpperCase();
-
-  const handleRestart = () => {
-    playClick();
-    triggerHaptic('light');
-    onResetGame();
-  };
 
   return (
     <motion.div
@@ -87,52 +79,87 @@ export default function StickerScreen({ session, onResetGame }) {
             {session.name}
           </h3>
 
-          <p style={{
-            fontSize: '0.88rem',
-            color: 'var(--text-parchment-muted)',
-            lineHeight: '1.4',
-            marginBottom: '16px'
-          }}>
-            Ha superado con distinción las pruebas lógicas y mágicas de la carrera de Tecnologías de la Información.
-          </p>
+          {/* Condición de Entrega según Umbral de 350 pts */}
+          {(session.totalScore || 0) >= 350 ? (
+            <>
+              <p style={{
+                fontSize: '0.88rem',
+                color: 'var(--text-parchment-muted)',
+                lineHeight: '1.4',
+                marginBottom: '16px'
+              }}>
+                Ha superado con honor las pruebas del Desafío Mágico alcanzando <strong>{session.totalScore || 0} / 500 puntos</strong>.
+              </p>
 
-          {/* Código de Verificación para el Staff */}
-          <div style={{
-            backgroundColor: '#EDE0C4',
-            padding: '10px 14px',
-            borderRadius: '8px',
-            border: '1px dashed var(--crimson)',
-            display: 'inline-flex',
-            flexDirection: 'column',
-            gap: '2px'
-          }}>
-            <span style={{ fontSize: '0.72rem', color: 'var(--text-parchment-muted)', fontWeight: '600' }}>
-              CÓDIGO DE VALIDACIÓN
-            </span>
-            <span style={{
-              fontFamily: 'monospace',
-              fontSize: '1.2rem',
-              fontWeight: '900',
-              letterSpacing: '2px',
-              color: 'var(--crimson)'
-            }}>
-              TI-{code}
-            </span>
-          </div>
+              {/* Código de Verificación para el Staff */}
+              <div style={{
+                backgroundColor: '#EDE0C4',
+                padding: '12px 18px',
+                borderRadius: '10px',
+                border: '2px dashed var(--crimson)',
+                display: 'inline-flex',
+                flexDirection: 'column',
+                gap: '4px',
+                boxShadow: '0 4px 12px rgba(126, 18, 29, 0.15)'
+              }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-parchment-muted)', fontWeight: '700' }}>
+                  CÓDIGO OFICIAL DE CANJE
+                </span>
+                <span style={{
+                  fontFamily: 'monospace',
+                  fontSize: '1.35rem',
+                  fontWeight: '900',
+                  letterSpacing: '2px',
+                  color: 'var(--crimson)'
+                }}>
+                  {session.verificationCode || `TI-${code}`}
+                </span>
+                <span style={{ fontSize: '0.68rem', color: 'var(--emerald)', fontWeight: '700' }}>
+                  ● Estado: Pendiente de entrega
+                </span>
+              </div>
 
-          <div style={{
-            marginTop: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            color: 'var(--emerald)',
-            fontWeight: '700',
-            fontSize: '0.85rem'
-          }}>
-            <CheckCircle size={18} />
-            Misión Completada al 100%
-          </div>
+              <div style={{
+                marginTop: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                color: 'var(--emerald)',
+                fontWeight: '700',
+                fontSize: '0.85rem'
+              }}>
+                <CheckCircle size={18} />
+                Apto para Pegatina Holográfica Oficial
+              </div>
+            </>
+          ) : (
+            <>
+              <p style={{
+                fontSize: '0.88rem',
+                color: 'var(--text-parchment-muted)',
+                lineHeight: '1.4',
+                marginBottom: '16px'
+              }}>
+                Ha completado los desafíos con <strong>{session.totalScore || 0} / 500 puntos</strong>. El umbral para obtener la pegatina holográfica es de <strong>350 puntos</strong>.
+              </p>
+
+              <div style={{
+                backgroundColor: 'rgba(212, 168, 67, 0.15)',
+                padding: '12px 16px',
+                borderRadius: '10px',
+                border: '1px solid var(--gold)',
+                display: 'inline-block'
+              }}>
+                <div style={{ fontSize: '0.82rem', color: 'var(--text-parchment)', fontWeight: '600' }}>
+                  ¡Gran participación en el Desafío Mágico!
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-parchment-muted)', marginTop: '4px' }}>
+                  Has puesto a prueba tu lógica y pensamiento computacional.
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Instrucción para el participante */}
@@ -145,29 +172,26 @@ export default function StickerScreen({ session, onResetGame }) {
           fontSize: '0.85rem',
           lineHeight: '1.4'
         }}>
-          👉 <strong>Muestra esta pantalla al estudiante encargado del stand</strong> para que verifique tu código y te entregue el sticker oficial.
+          {(session.totalScore || 0) >= 350 ? (
+            <span>👉 <strong>Muestra esta pantalla al estudiante encargado del stand</strong> para que verifique tu código y te entregue la pegatina oficial.</span>
+          ) : (
+            <span>🎉 <strong>¡Gracias por participar!</strong> Acércate al stand para conocer más proyectos de la carrera de TI.</span>
+          )}
         </div>
       </div>
 
-      {/* Botón de reiniciar para siguiente jugador */}
-      <button
-        onClick={handleRestart}
-        style={{
-          background: 'none',
-          border: 'none',
-          color: 'var(--text-muted)',
-          fontSize: '0.8rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          cursor: 'pointer',
-          marginTop: '20px',
-          padding: '8px 12px'
-        }}
-      >
-        <RotateCcw size={14} />
-        Jugar otra partida (Nuevo Participante)
-      </button>
+      {/* Sello de partida bloqueada y protegida contra fraudes */}
+      <div style={{
+        marginTop: '20px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        color: 'var(--text-muted)',
+        fontSize: '0.75rem',
+        opacity: 0.8
+      }}>
+        <span>🔒 Partida finalizada y registrada oficialmente</span>
+      </div>
     </motion.div>
   );
 }

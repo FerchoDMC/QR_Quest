@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Sparkles, Shield, Users, FlaskRound, Hourglass, Flame, Star, 
-  HelpCircle, CheckCircle2, XCircle, ArrowRight, RefreshCw, Zap
+  Sparkles, Shield, Hourglass, HelpCircle, CheckCircle2, 
+  XCircle, ArrowRight, Zap 
 } from 'lucide-react';
 import { CHALLENGES } from '../data/challenges';
 import { playSuccess, playError, playSparkle, playClick } from '../utils/audio';
@@ -35,6 +35,10 @@ export default function ChallengeRunner({
   const [discardedOptions, setDiscardedOptions] = useState([]); // opciones eliminadas por poción
   const [isShieldActive, setIsShieldActive] = useState(session.isShieldActive || false);
   const [attemptsLeft, setAttemptsLeft] = useState(session.attemptsLeft ?? 2);
+  const [isPhoenixRescue, setIsPhoenixRescue] = useState(false);
+
+  // Temporizador activo por desafío
+  const [timeLeft, setTimeLeft] = useState(challenge.durationSecs || 45);
 
   // Reiniciar estado local al cambiar de desafío
   useEffect(() => {
@@ -42,7 +46,24 @@ export default function ChallengeRunner({
     setFeedbackState(null);
     setDiscardedOptions([]);
     setAttemptsLeft(2);
-  }, [session.currentStepIndex]);
+    setIsPhoenixRescue(false);
+    setTimeLeft(challenge.durationSecs || 45);
+  }, [session.currentStepIndex, challenge.durationSecs]);
+
+  // Cuenta regresiva del reloj
+  useEffect(() => {
+    if (feedbackState?.type === 'success' || attemptsLeft <= 0) return;
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [feedbackState, attemptsLeft]);
 
   // Manejo de selección de respuesta
   const handleSelectOption = (option) => {
@@ -52,14 +73,16 @@ export default function ChallengeRunner({
     setSelectedOption(option.id);
 
     if (option.isCorrect) {
-      // RESPUESTA CORRECTA
+      // RESPUESTA CORRECTA: 100 pts (1er intento), 60 pts (2do intento o Fénix)
       playSuccess();
       triggerHaptic('success');
+      const points = isPhoenixRescue ? 60 : (attemptsLeft === 2 ? 100 : 60);
       setFeedbackState({
         type: 'success',
         title: '¡Encantamiento Acertado!',
-        message: 'Has resuelto este misterio con precisión mágica.',
-        explanation: challenge.explanation
+        message: `Has resuelto este misterio con precisión mágica. (+${points} pts)`,
+        explanation: challenge.explanation,
+        pointsEarned: points
       });
     } else {
       // RESPUESTA INCORRECTA
@@ -84,7 +107,7 @@ export default function ChallengeRunner({
           setFeedbackState({
             type: 'error',
             title: 'Respuesta Incorrecta',
-            message: `El hechizo no surtió efecto. Te queda ${nextAttempts} intento.`,
+            message: `El hechizo no surtió efecto. Te queda ${nextAttempts} intento (vale 60 pts).`,
             explanation: 'Puedes solicitar una pista mágica o usar tus comodines.'
           });
         } else {
@@ -94,8 +117,8 @@ export default function ChallengeRunner({
             type: 'exhausted',
             title: 'Intentos Agotados',
             message: hasPhoenix 
-              ? 'Has agotado tus intentos, ¡pero tienes el Fénix Salvador disponible!'
-              : 'Has agotado tus intentos. La magia revela el misterio para que sigas aprendiendo.',
+              ? 'Has agotado tus intentos, ¡pero tienes el Fénix Salvador disponible para 1 rescate por 60 pts!'
+              : 'Has agotado tus intentos (0 pts). La magia revela el misterio para que sigas aprendiendo.',
             explanation: challenge.explanation,
             allowPhoenix: hasPhoenix
           });
@@ -110,22 +133,29 @@ export default function ChallengeRunner({
     triggerHaptic('light');
 
     const nextIndex = session.currentStepIndex + 1;
+    const earnedPoints = isSuccess 
+      ? (feedbackState?.pointsEarned ?? (isPhoenixRescue ? 60 : (attemptsLeft === 2 ? 100 : 60))) 
+      : 0;
+    const nextTotalScore = (session.totalScore || 0) + earnedPoints;
+
     const completedRecord = {
       challengeId: challenge.id,
       isSuccess,
-      attemptsUsed: 2 - attemptsLeft
+      attemptsUsed: 2 - attemptsLeft,
+      scoreEarned: earnedPoints
     };
 
     const updatedCompleted = [...session.completedChallenges, completedRecord];
 
     if (nextIndex >= session.assignedChallengeIds.length) {
-      // Completó los 3 desafíos
-      onFinishAllChallenges(updatedCompleted);
+      // Completó los 5 desafíos
+      onFinishAllChallenges(updatedCompleted, nextTotalScore);
     } else {
       // Siguiente reto
       onUpdateSession({
         ...session,
         currentStepIndex: nextIndex,
+        totalScore: nextTotalScore,
         attemptsLeft: 2,
         isShieldActive: false,
         completedChallenges: updatedCompleted
@@ -165,12 +195,14 @@ export default function ChallengeRunner({
       }
 
       case 'fenix':
-        setAttemptsLeft(2);
+        setIsPhoenixRescue(true);
+        setAttemptsLeft(1);
         setFeedbackState(null);
         setSelectedOption(null);
+        setTimeLeft(challenge.durationSecs || 45); // Reinicio de reloj
         setActiveWildcardModal({
           title: '🔥 Fénix Salvador',
-          message: '¡Has renacido de las cenizas! Tus 2 intentos han sido restaurados.'
+          message: '¡Has renacido de las cenizas! Reloj reiniciado con 1 intento de rescate por 60 pts.'
         });
         break;
 
@@ -192,9 +224,10 @@ export default function ChallengeRunner({
         break;
 
       case 'giratiempo':
+        setTimeLeft((prev) => prev + 20);
         setActiveWildcardModal({
           title: '⏳ Giratiempo',
-          message: 'Has ganado tiempo adicional para meditar tu respuesta.'
+          message: '¡El artefacto ha retrocedido el tiempo! +20 segundos añadidos al reloj.'
         });
         break;
 
@@ -218,7 +251,7 @@ export default function ChallengeRunner({
       padding: '16px 18px',
       position: 'relative'
     }}>
-      {/* 1. Cabecera con Progreso y Vidas */}
+      {/* 1. Cabecera con Progreso, Reloj y Vidas */}
       <div>
         <div style={{
           display: 'flex',
@@ -232,14 +265,26 @@ export default function ChallengeRunner({
               color: 'var(--gold-light)',
               fontFamily: 'var(--font-magic)'
             }}>
-              DESAFÍO {session.currentStepIndex + 1} DE 3
+              DESAFÍO {session.currentStepIndex + 1} DE {session.assignedChallengeIds?.length || 5}
             </span>
-            <div style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
-              {[0, 1, 2].map(idx => (
+            <span style={{
+              marginLeft: '8px',
+              fontSize: '0.72rem',
+              padding: '2px 8px',
+              borderRadius: '10px',
+              backgroundColor: 'rgba(212, 168, 67, 0.22)',
+              color: 'var(--gold-light)',
+              fontWeight: '700',
+              border: '1px solid rgba(212, 168, 67, 0.35)'
+            }}>
+              {session.totalScore || 0} / 500 pts
+            </span>
+            <div style={{ display: 'flex', gap: '5px', marginTop: '4px' }}>
+              {(session.assignedChallengeIds || [0, 1, 2, 3, 4]).map((_, idx) => (
                 <div
                   key={idx}
                   style={{
-                    width: '26px',
+                    width: '18px',
                     height: '6px',
                     borderRadius: '3px',
                     backgroundColor: idx < session.currentStepIndex
@@ -253,30 +298,48 @@ export default function ChallengeRunner({
             </div>
           </div>
 
-          {/* Vidas / Escudo */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            backgroundColor: 'rgba(22, 36, 56, 0.7)',
-            padding: '6px 12px',
-            borderRadius: 'var(--radius-full)',
-            border: '1px solid rgba(212, 168, 67, 0.3)'
-          }}>
-            {isShieldActive && (
-              <span title="Escudo Activo" style={{ display: 'flex', alignItems: 'center' }}>
-                <Shield size={16} color="var(--gold-light)" className="glow-pulse" />
-              </span>
-            )}
-            <div style={{ display: 'flex', gap: '4px' }}>
-              {[...Array(2)].map((_, i) => (
-                <Zap
-                  key={i}
-                  size={16}
-                  color={i < attemptsLeft ? 'var(--gold)' : 'rgba(255, 255, 255, 0.2)'}
-                  fill={i < attemptsLeft ? 'var(--gold)' : 'none'}
-                />
-              ))}
+          {/* Temporizador Activo y Vidas / Escudo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              backgroundColor: timeLeft <= 10 ? 'rgba(126, 18, 29, 0.75)' : 'rgba(22, 36, 56, 0.7)',
+              padding: '6px 10px',
+              borderRadius: 'var(--radius-full)',
+              border: `1px solid ${timeLeft <= 10 ? 'var(--crimson-light)' : 'rgba(212, 168, 67, 0.3)'}`,
+              fontSize: '0.78rem',
+              fontWeight: '700',
+              color: timeLeft <= 10 ? '#FF7675' : 'var(--gold-light)'
+            }}>
+              <Hourglass size={13} />
+              <span>{timeLeft}s</span>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              backgroundColor: 'rgba(22, 36, 56, 0.7)',
+              padding: '6px 12px',
+              borderRadius: 'var(--radius-full)',
+              border: '1px solid rgba(212, 168, 67, 0.3)'
+            }}>
+              {isShieldActive && (
+                <span title="Escudo Activo" style={{ display: 'flex', alignItems: 'center' }}>
+                  <Shield size={16} color="var(--gold-light)" className="glow-pulse" />
+                </span>
+              )}
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {[...Array(2)].map((_, i) => (
+                  <Zap
+                    key={i}
+                    size={16}
+                    color={i < attemptsLeft ? 'var(--gold)' : 'rgba(255, 255, 255, 0.2)'}
+                    fill={i < attemptsLeft ? 'var(--gold)' : 'none'}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>

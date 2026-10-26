@@ -159,6 +159,11 @@ export default function MazePathVisual({ selectedOptionId }) {
           <div style={{ color: currentStep >= 3 ? 'var(--success)' : '#64748B' }}>
             Maniobra 3: Gira 90° a su derecha
           </div>
+          {selectedOptionId && (
+            <div style={{ marginTop: '4px', fontSize: '0.68rem', color: 'var(--gold-light)', fontStyle: 'italic' }}>
+              ✓ Rumbo fijado en la opción
+            </div>
+          )}
         </div>
       </div>
     </div>

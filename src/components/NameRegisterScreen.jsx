@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Feather, Sparkles } from 'lucide-react';
+import { Feather, Sparkles, ArrowLeft } from 'lucide-react';
 import { playSparkle, playClick } from '../utils/audio';
 import { triggerHaptic } from '../utils/haptics';
 
@@ -27,6 +27,12 @@ export default function NameRegisterScreen({ onSubmitName, onBack }) {
     onSubmitName(cleanName);
   };
 
+  const handleBack = () => {
+    playClick();
+    triggerHaptic('light');
+    if (onBack) onBack();
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 30 }}
@@ -38,10 +44,36 @@ export default function NameRegisterScreen({ onSubmitName, onBack }) {
         flexDirection: 'column',
         justifyContent: 'center',
         padding: '24px 20px',
-        minHeight: '100%'
+        minHeight: '100%',
+        position: 'relative'
       }}
     >
-      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+      {onBack && (
+        <button
+          onClick={handleBack}
+          style={{
+            position: 'absolute',
+            top: '12px',
+            left: '16px',
+            background: 'none',
+            border: 'none',
+            color: 'var(--gold-light)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            fontSize: '0.8rem',
+            cursor: 'pointer',
+            padding: '4px 8px',
+            borderRadius: '12px',
+            backgroundColor: 'rgba(22, 36, 56, 0.6)'
+          }}
+        >
+          <ArrowLeft size={14} />
+          <span>Volver</span>
+        </button>
+      )}
+
+      <div style={{ textAlign: 'center', marginBottom: '28px', marginTop: '16px' }}>
         <motion.div
           animate={{ rotate: [0, -8, 8, 0] }}
           transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}

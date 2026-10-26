@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Sparkles, Trophy, ArrowRight, Award } from 'lucide-react';
-import { playSuccess, playSparkle, playClick } from '../utils/audio';
+import { Sparkles, Trophy, ArrowRight } from 'lucide-react';
+import { playSuccess, playClick } from '../utils/audio';
 import { triggerHaptic } from '../utils/haptics';
 
 export default function CelebrationScreen({ session, onDiscoverAreas }) {
@@ -71,14 +71,47 @@ export default function CelebrationScreen({ session, onDiscoverAreas }) {
           ¡Misión Cumplida, {session.name}!
         </h2>
 
+        <div style={{
+          display: 'inline-flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '4px',
+          backgroundColor: 'rgba(212, 168, 67, 0.15)',
+          border: '1px solid var(--gold)',
+          borderRadius: '16px',
+          padding: '10px 22px',
+          marginBottom: '14px'
+        }}>
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', letterSpacing: '0.5px' }}>
+            PUNTUACIÓN OBTENIDA
+          </span>
+          <span style={{
+            fontSize: '1.6rem',
+            fontFamily: 'var(--font-magic)',
+            fontWeight: '900',
+            color: 'var(--gold-light)'
+          }}>
+            {session.totalScore || 0} / 500 pts
+          </span>
+          <span style={{
+            fontSize: '0.75rem',
+            fontWeight: '600',
+            color: (session.totalScore || 0) >= 350 ? 'var(--success)' : 'var(--amber)'
+          }}>
+            {(session.totalScore || 0) >= 350 
+              ? '✨ ¡Apto para Pegatina Oficial (≥ 350 pts)!' 
+              : '📖 Entrenamiento Formativo (< 350 pts)'}
+          </span>
+        </div>
+
         <p style={{
           color: 'var(--gold-light)',
           fontFamily: 'var(--font-serif)',
-          fontSize: '0.95rem',
+          fontSize: '0.92rem',
           fontStyle: 'italic',
-          marginBottom: '20px'
+          marginBottom: '16px'
         }}>
-          Has superado con éxito las tres pruebas de ingenio.
+          Has completado los 5 desafíos del Grimorio de Tecnologías de la Información.
         </p>
 
         {/* Mensaje de revelación pedagógica */}

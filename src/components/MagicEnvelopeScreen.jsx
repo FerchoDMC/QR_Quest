@@ -1,22 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, ArrowRight, Shield, Users, FlaskRound, Hourglass, Flame, Star, Check } from 'lucide-react';
+import { Sparkles, ArrowRight } from 'lucide-react';
 import { playEnvelopeOpen, playSparkle, playClick } from '../utils/audio';
 import { triggerHaptic } from '../utils/haptics';
 
-// Mapa de iconos para los comodines
-const ICON_MAP = {
-  escudo: Shield,
-  ayuda_mago: Users,
-  sabiduria: FlaskRound,
-  giratiempo: Hourglass,
-  fenix: Flame,
-  felix: Star
-};
-
 export default function MagicEnvelopeScreen({ participantName, wildcards, onContinue }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [revealedIndex, setRevealedIndex] = useState(0);
 
   const handleOpenEnvelope = () => {
     if (isOpen) return;
@@ -152,7 +141,6 @@ export default function MagicEnvelopeScreen({ participantName, wildcards, onCont
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <AnimatePresence>
               {wildcards.map((wc, index) => {
-                const IconComponent = ICON_MAP[wc.slug] || Star;
                 return (
                   <motion.div
                     key={wc.slug}

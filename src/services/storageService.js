@@ -17,9 +17,9 @@ function shuffle(array) {
  * Inicializa una nueva sesión para un participante
  */
 export function startNewSession(participantName) {
-  // 1. Sorteo de 3 desafíos únicos del banco de 10
+  // 1. Sorteo de 5 desafíos únicos del banco de 10 (Regla Versión 2.2)
   const shuffledChallenges = shuffle(CHALLENGES);
-  const selectedChallenges = shuffledChallenges.slice(0, 3).map(c => c.id);
+  const selectedChallenges = shuffledChallenges.slice(0, 5).map(c => c.id);
 
   // 2. Sorteo probabilístico de la cantidad de comodines:
   // 40% -> 1 comodín | 40% -> 2 comodines | 20% -> 3 comodines
@@ -54,13 +54,15 @@ export function startNewSession(participantName) {
     id: 'wiz_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 7),
     name: participantName.trim(),
     assignedChallengeIds: selectedChallenges,
-    currentStepIndex: 0, // 0, 1 o 2
+    currentStepIndex: 0, // 0 a 4
+    totalScore: 0,       // Puntuación acumulada (máx 500)
     attemptsLeft: 2,
     wildcards: chosenWildcards,
     isShieldActive: false,
     discardedOptionIds: [], // opciones ocultadas por Poción de Sabiduría
     extraTimeSeconds: 0,    // segundos sumados por Giratiempo
-    completedChallenges: [], // [{ id, isSuccess, attemptsUsed }]
+    completedChallenges: [], // [{ id, isSuccess, attemptsUsed, scoreEarned }]
+    verificationCode: null,
     isEnvelopeOpened: false,
     startedAt: Date.now(),
     completedAt: null

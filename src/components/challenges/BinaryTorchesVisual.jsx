@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Flame } from 'lucide-react';
 import { playTorchIgnite } from '../../utils/audio';
 
-export default function BinaryTorchesVisual({ selectedOptionId }) {
+export default function BinaryTorchesVisual({ _selectedOptionId }) {
   // Estado inicial: 8 (off), 4 (on), 2 (on), 1 (off) -> 0 1 1 0 (6)
   const [torches, setTorches] = useState([
     { id: '8', value: 8, isOn: false, label: 'Gema 8' },

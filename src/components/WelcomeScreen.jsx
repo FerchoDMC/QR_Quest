@@ -1,10 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Wand2, Sparkles, Scroll } from 'lucide-react';
-import { playSparkle, playClick } from '../utils/audio';
+import { playSparkle } from '../utils/audio';
 import { triggerHaptic } from '../utils/haptics';
+import escudoImg from '../assets/escudo2.jpg';
 
-export default function WelcomeScreen({ onStart }) {
+export default function WelcomeScreen({ onStart, onTestLoader }) {
   const handleStart = () => {
     playSparkle();
     triggerHaptic('magic');
@@ -27,16 +28,25 @@ export default function WelcomeScreen({ onStart }) {
         textAlign: 'center'
       }}
     >
-      {/* Sello de Hogwarts superior */}
+      {/* Escudo Oficial del Departamento de Misterios de TI */}
       <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: 'spring', damping: 12, delay: 0.1 }}
+        initial={{ scale: 0, rotate: -6 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: 'spring', damping: 14, delay: 0.1 }}
         style={{ marginBottom: '16px' }}
       >
-        <div className="wax-seal glow-pulse">
-          TI
-        </div>
+        <img
+          src={escudoImg}
+          alt="Escudo Departamento de Misterios de TI"
+          style={{
+            width: '135px',
+            height: 'auto',
+            borderRadius: '16px',
+            border: '2px solid rgba(212, 168, 67, 0.5)',
+            boxShadow: '0 0 30px rgba(212, 168, 67, 0.4), 0 8px 25px rgba(0,0,0,0.7)',
+            objectFit: 'contain'
+          }}
+        />
       </motion.div>
 
       {/* Título Épico */}
@@ -123,13 +133,34 @@ export default function WelcomeScreen({ onStart }) {
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '6px',
+        justifyContent: 'center',
+        gap: '12px',
         marginTop: '16px',
         color: 'var(--text-muted)',
-        fontSize: '0.8rem'
+        fontSize: '0.8rem',
+        flexWrap: 'wrap'
       }}>
-        <Sparkles size={14} color="var(--gold)" />
-        Duración estimada: 3 a 5 minutos
+        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Sparkles size={14} color="var(--gold)" />
+          Duración estimada: 3 a 5 minutos
+        </span>
+
+        {onTestLoader && (
+          <button
+            onClick={onTestLoader}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--gold-light)',
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              fontSize: '0.78rem',
+              opacity: 0.8
+            }}
+          >
+            🔮 Probar animación de carga
+          </button>
+        )}
       </div>
     </motion.div>
   );
